@@ -1,15 +1,21 @@
+// Importar las dependencias necesarias
 const yargs = require('yargs');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+
 //----------------------------------------------------------------------------------------------------------
+// Función para crear una nueva tarea
 const funcionCreate = async (argv) => {
     const { titulo, contenido } = argv;
     const id = uuidv4().slice(0, 8);
     const nuevaTarea = { id: id, titulo: titulo, contenido: contenido };
     try {
+        // Leer el archivo tareas.txt
         const tarea = await fs.promises.readFile('tareas.txt', 'utf8');
         const arrayTareas = JSON.parse(tarea);
+        // Agregar la nueva tarea al array de tareas
         arrayTareas.push(nuevaTarea);
+        // Guardar el array de tareas actualizado en el archivo
         await fs.promises.writeFile('tareas.txt', JSON.stringify(arrayTareas, null, 2));
         console.log("Nueva Tarea Agregada");
     } catch (error) {
@@ -17,8 +23,11 @@ const funcionCreate = async (argv) => {
     }
 };
 //----------------------------------------------------------------------------------------------------------
+
+// Función para mostrar todas las tareas existentes
 const funcionRead = async () => {
     try {
+        // Leer el archivo tareas.txt
         const tareasArchivo = await fs.promises.readFile('tareas.txt', 'utf8');
         const arrayTareas = JSON.parse(tareasArchivo);
         
@@ -38,15 +47,21 @@ const funcionRead = async () => {
     }
 };
 //----------------------------------------------------------------------------------------------------------
+
+// Función para actualizar una tarea existente
 const funcionUpdate = async (argv) => {
     const { id, titulo, contenido } = argv;
     try {
+        // Leer el archivo tareas.txt
         const tareasArchivo = await fs.promises.readFile('tareas.txt', 'utf8');
         const arrayTareas = JSON.parse(tareasArchivo);
+        // Buscar la tarea con el ID especificado
         const tareaActual = arrayTareas.findIndex(tarea => tarea.id === id);
         if (tareaActual !== -1) {
+            // Actualizar el título y/o contenido de la tarea si se proporcionaron nuevos valores
             arrayTareas[tareaActual].titulo = titulo || arrayTareas[tareaActual].titulo;
             arrayTareas[tareaActual].contenido = contenido || arrayTareas[tareaActual].contenido;
+            // Guardar el array de tareas actualizado en el archivo
             await fs.promises.writeFile('tareas.txt', JSON.stringify(arrayTareas, null, 2));
             console.log("La tarea ha sido actualizada");
         } else {
@@ -56,17 +71,26 @@ const funcionUpdate = async (argv) => {
         console.error("Error al actualizar la tarea:", error);
     }
 };
-
 //----------------------------------------------------------------------------------------------------------
-const funcionDelete = async ({id}) => {
-    const tareasArchivo = await fs.promises.readFile('tareas.txt', 'utf8');
-    const arrayTareas = JSON.parse(tareasArchivo);
-    const nuevaTarea = arrayTareas.filter(tareas => tareas.id !== id);
-    await fs.promises.writeFile('tareas.txt', JSON.stringify(arrayTareas, null, 2));
-    console.log("La tarea a sido eliminada exitosamente");
 
-}
+// Función para eliminar una tarea
+const funcionDelete = async ({ id }) => {
+    try {
+        // Leer el archivo tareas.txt
+        const tareasArchivo = await fs.promises.readFile('tareas.txt', 'utf8');
+        const arrayTareas = JSON.parse(tareasArchivo);
+        // Filtrar el array de tareas para excluir la tarea con el ID especificado
+        const nuevaTarea = arrayTareas.filter(tarea => tarea.id !== id);
+        // Guardar el nuevo array de tareas en el archivo
+        await fs.promises.writeFile('tareas.txt', JSON.stringify(nuevaTarea, null, 2));
+        console.log("La tarea ha sido eliminada exitosamente");
+    } catch (error) {
+        console.error("Error al eliminar la tarea:", error);
+    }
+};
 //----------------------------------------------------------------------------------------------------------
+
+// Configuración del comando 'create'
 const createConfig = {
     titulo: {
         describe: "El nombre de la tarea a realizar",
@@ -80,6 +104,8 @@ const createConfig = {
     }
 };
 //----------------------------------------------------------------------------------------------------------
+
+// Configuración del comando 'update'
 const updateConfig = {
     id: {
         describe: "El ID de la tarea a actualizar",
@@ -98,16 +124,16 @@ const updateConfig = {
     }
 };
 
-const deleteConfig ={
+// Configuración del comando 'delete'
+const deleteConfig = {
     id: {
-        describe: "El identificado de la tarea a eliminar",
+        describe: "El identificador de la tarea a eliminar",
         alias: "i",
-        demandOption: true //tarea obligatoria
-
+        demandOption: true // Tarea obligatoria
     }
+};
 
-}
-
+// Procesar los comandos con yargs
 const args = yargs
     .command('create', 'Crear una nueva tarea', createConfig, (argv) => funcionCreate(argv))
     //como llamar al metodo en consola? 
